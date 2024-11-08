@@ -30,6 +30,8 @@ public class JwtTokenProvider {
     @Value("${security.refresh-token-exp:}")
     private void setValue2(long value) { refreshTokenExp = value; }
 
+    // 일종의 세션과 같은 역할을 하며 여러 사용자의 Token을 저장한다.
+    // ConcurrentHashMap을 통해 여러 스레드가 동시에 접속해도 안전할 수 있도록 한다.
     private static ConcurrentMap<String, String> tokenMap = new ConcurrentHashMap<>();
 
     private static String createToken(String userId, String username, List<String> roles, long expiration) {
@@ -48,6 +50,29 @@ public class JwtTokenProvider {
         log.info("Token created: {}, {}", username, token);
 
         return token;
+    }
+
+    public static String checkToken(String userId){
+        if (tokenMap.containsKey(userId)) {
+            String token = tokenMap.get(userId);
+
+            try{
+                // 토큰 만료 확인
+                byte[] signingKey = SecurityConstants.JWT_SECRET.getBytes();
+
+                Jwts.parser()
+                        .setSigningKey(signingKey)
+                        .build()
+                        .parseSignedClaims(token.replace(SecurityConstants.TOKEN_PREFIX, ""));
+
+                return token;
+            } catch (ExpiredJwtException exception) {
+                // 토큰 만료시 발생하는 로직
+                log.warn("Request to parse expired JWT : {} failed : {}", token, exception.getMessage());
+                expireToken(userId);
+            }
+        }
+        return null;
     }
 
     public Map<String, String> getAuthInfoByToken(String token) {
@@ -153,6 +178,8 @@ public class JwtTokenProvider {
             }
         } catch (ExpiredJwtException exception){
             log.warn("토큰이 만료되었어요");
+            // 토큰 만료시 로직 시행
+            expireTokenByVal(token);
         }catch (UnsupportedJwtException exception) {
             log.warn("Request to parse unsupported JWT : {} failed : {}", token, exception.getMessage());
         } catch (MalformedJwtException exception) {
@@ -163,5 +190,13 @@ public class JwtTokenProvider {
             log.error(exception.getMessage(), exception);
         }
         return null;
+    }
+
+    // token 목록 관리
+    public static void setTokenMap(String userId, String token){
+        if (StringUtils.isNotEmpty(token) && token.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+            token = token.replace("Bearer ", "");
+            tokenMap.put(userId, token);
+        }
     }
 }

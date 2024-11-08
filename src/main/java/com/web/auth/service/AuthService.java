@@ -6,8 +6,10 @@ import com.web.auth.constants.SecurityConstants;
 import com.web.auth.security.SecurityConfig;
 import com.web.auth.security.jwt.JwtTokenProvider;
 import com.web.auth.service.Core.ManagerDto;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.base.base.api.ApiResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -17,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -27,6 +30,7 @@ public class AuthService implements UserDetailsService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     private final CoreClient coreClient;
 
@@ -69,5 +73,36 @@ public class AuthService implements UserDetailsService {
             log.error("Token validation failed. token : {}", token);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
         }
+    }
+
+    private boolean processRefreshToken(RefreshTokenDto refreshTokenDto, HttpServletResponse response) throws JsonProcessingException{
+        ApiResponseDto apiResponseDto = this.
+    }
+
+    private boolean generateAndSaveTokens(String userId, String username, int roleId, RefreshTokenDto refreshTokenDto,
+                                          HttpServletResponse response){
+        String accessToken = JwtTokenProvider.doGenerateAccessToken(
+                userId,
+                username,
+                List.of(String.valueOf(roleId)));
+        log.info("refreshToken, Create access token by refresh token : {}, {}, ", userId, accessToken);
+
+        // refresh token 갱신
+        String refreshToken = JwtTokenProvider.doGenerateRefreshToken(
+                userId,
+                username,
+                List.of(String.valueOf(roleId)));
+        log.info("refreshToken, Create refresh token by refresh token : {}, {}, ", userId, refreshToken);
+
+        // refresh token 적재
+        refreshTokenDto.setRefreshToken(refreshToken);
+        refreshTokenService.save(refreshTokenDto, userId);
+
+        JwtTokenProvider.setTokenMap(userId, SecurityConstants.TOKEN_PREFIX + accessToken);
+
+        response.setHeader(SecurityConstants.ACCESS_TOKEN_HEADER, SecurityConstants.TOKEN_PREFIX + accessToken);
+        response.setHeader(SecurityConstants.REFRESH_TOKEN_HEADER, SecurityConstants.TOKEN_PREFIX + refreshToken);
+
+        return true;
     }
 }

@@ -10,7 +10,7 @@ public class SecurityConstants {
     public static final String X_MEMBER_HEADER = "X-Member-Header";
     public static final String X_AUTHENTICATED_USERNAME_HEADER = "X-Authenticated-Username";
 
-    public static final String JWT_SECRET = "cvijk6AhxiiHAcrbBQFwVLlVxaLYN87ZOZmP-NrA0JRkMSQGp6AOZOr7YANZHv1CzgDq7mjIUkTMQifCFdOrpg";
+    public static final String JWT_SECRET = "cdasdsadsadqweqwiohfpoidjnsapfvu809u23pjjiofgDq7mjIUkTMQifCFdOrpg";
     public static final String TOKEN_TYPE = "JWT";
     public static final String TOKEN_ISSUER = "imp-api";
     public static final String TOKEN_AUDIENCE = "imp-app";
