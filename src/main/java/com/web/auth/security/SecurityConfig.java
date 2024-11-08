@@ -124,7 +124,8 @@ public class SecurityConfig {
     }
     private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authz){
         authz.requestMatchers(new AntPathRequestMatcher(BASIC_AUTH_LOGIN_URL)).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/no-auth/**")).permitAll();
+                .requestMatchers(new AntPathRequestMatcher("/api/no-auth/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/validate")).permitAll();
     }
 
     public static final boolean isPermitAllPath(String uri) {

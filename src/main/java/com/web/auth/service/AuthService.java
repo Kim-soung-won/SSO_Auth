@@ -58,7 +58,7 @@ public class AuthService implements UserDetailsService {
     public ResponseEntity<String> validateToken(String token){
         try {
             Map<String, String> authInfo = jwtTokenProvider.getAuthInfoByToken(token);
-
+            log.info("authInfo : {}", authInfo.get("userId"));
             if(authInfo == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
             }
