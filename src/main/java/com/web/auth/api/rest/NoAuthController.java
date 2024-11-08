@@ -19,7 +19,6 @@ public class NoAuthController {
 
     @PostMapping("/encode")
     public ApiResponseDto<String> encode(@RequestBody String rawPassword) {
-        log.info("rawPassword: {}", rawPassword);
         return new ApiResponseDto<String>(true, authService.encode(rawPassword));
     }
 }
