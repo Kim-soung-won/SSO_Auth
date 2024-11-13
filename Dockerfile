@@ -7,7 +7,7 @@ RUN apt-get install -y curl zip unzip git vim
 RUN curl -s "https://get.sdkman.io" | bash
 RUN apt-get update
 
-RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && sdk install gradle 8.7"
+RUN bash -c "source /root/.sdkman/bin/sdkman-init.sh && sdk install gradle 8.8"
 
 RUN apt-get clean
 RUN mkdir /var/run/sshd
