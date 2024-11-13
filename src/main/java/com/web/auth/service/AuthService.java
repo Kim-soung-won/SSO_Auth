@@ -1,6 +1,7 @@
 package com.web.auth.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.auth.client.CoreClient;
 import com.web.auth.constants.SecurityConstants;
 import com.web.auth.security.SecurityConfig;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.base.base.api.ApiResponseDto;
+import org.base.base.exception.BackendException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -31,6 +33,7 @@ public class AuthService implements UserDetailsService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final ObjectMapper objectMapper;
 
     private final CoreClient coreClient;
 
@@ -75,11 +78,37 @@ public class AuthService implements UserDetailsService {
         }
     }
 
-    private boolean processRefreshToken(RefreshTokenDto refreshTokenDto, HttpServletResponse response) throws JsonProcessingException{
-        ApiResponseDto apiResponseDto = this.
+    public boolean refreshToken(String refreshToken, HttpServletResponse response) throws BackendException, JsonProcessingException{
+        if (refreshToken == null){
+            log.error("refreshToken, Refresh token not found");
+            return false;
+        }
+        refreshToken = refreshToken.replace(SecurityConstants.TOKEN_PREFIX, "");
+        RefreshTokenDto refreshTokenDto = refreshTokenService.getByToken(refreshToken);
+
+        if(refreshTokenDto == null){
+            log.error("refreshToken, Refresh token not found");
+            return false;
+        }
+
+        return processRefreshToken(refreshTokenDto, response);
     }
 
-    private boolean generateAndSaveTokens(String userId, String username, int roleId, RefreshTokenDto refreshTokenDto,
+
+    private boolean processRefreshToken(RefreshTokenDto refreshTokenDto, HttpServletResponse response) throws JsonProcessingException{
+        ApiResponseDto apiResponseDto = this.coreClient.getManagerById(refreshTokenDto.getUserId());
+        String jsonString = objectMapper.writeValueAsString(apiResponseDto.getData());
+        ManagerDto managerDto = objectMapper.readValue(jsonString, ManagerDto.class);
+
+        if (managerDto != null){
+            return generateAndSaveTokens(managerDto.getId(), managerDto.getUsername(), managerDto.getRoleId(), refreshTokenDto, response);
+        }else {
+            log.error("refreshToken, User not found");
+            return false;
+        }
+    }
+
+    private boolean generateAndSaveTokens(String userId, String username, long roleId, RefreshTokenDto refreshTokenDto,
                                           HttpServletResponse response){
         String accessToken = JwtTokenProvider.doGenerateAccessToken(
                 userId,

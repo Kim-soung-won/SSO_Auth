@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 @Qualifier("CoreHttpClient")
 public interface CoreClient extends HttpClient {
 
-    @GetMapping("/api/manager/{managerId}")
+    @GetMapping("/api/manager/profile/{managerId}")
     ApiResponseDto<ManagerDto> getManagerById(@PathVariable("managerId") String managerId);
+
+    @GetMapping("/api/no-auth/manager/{managerId}")
+    ApiResponseDto<String> getManagerIdById(@PathVariable("managerId") String managerId);
 }

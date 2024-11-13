@@ -69,7 +69,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         errorResponse.setSuccess(false);
 
         if (e instanceof BadCredentialsException | e instanceof InternalAuthenticationServiceException) {
-            ApiResponseDto<ManagerDto> result = coreClient.getManagerById(username);
+            ApiResponseDto<String> result = coreClient.getManagerIdById(username);
             if(result.isSuccess()) {
                 errorResponse.setMessage("비밀번호가 일치하지 않습니다.");
             } else {
