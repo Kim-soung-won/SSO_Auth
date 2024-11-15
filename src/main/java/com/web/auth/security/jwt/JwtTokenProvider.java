@@ -4,6 +4,7 @@ import com.web.auth.constants.SecurityConstants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -149,7 +151,7 @@ public class JwtTokenProvider {
         tokenMap.remove(userId);
     }
 
-    public static UsernamePasswordAuthenticationToken getAuthentication(String token){
+    public static UsernamePasswordAuthenticationToken getAuthentication(String token, HttpServletResponse response) throws IOException {
         // 토큰이 존재하는지 확인
         // StringUtils를 사용하면 Null 안전성을 줄 수 있다. 일반 .isEmpty를 사용하면 Null일 때 NullException이 발생한다.
         if(StringUtils.isNoneEmpty(token) && token.startsWith(SecurityConstants.TOKEN_PREFIX)){
@@ -179,6 +181,7 @@ public class JwtTokenProvider {
         } catch (ExpiredJwtException exception){
             log.warn("토큰이 만료되었어요");
             // 토큰 만료시 로직 시행
+            response.sendError(HttpServletResponse.SC_CONFLICT, "토큰이 만료되었습니다.");
             expireTokenByVal(token);
         }catch (UnsupportedJwtException exception) {
             log.warn("Request to parse unsupported JWT : {} failed : {}", token, exception.getMessage());

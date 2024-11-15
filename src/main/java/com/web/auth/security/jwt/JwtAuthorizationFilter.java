@@ -35,7 +35,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
         try{
             // 인증 로직
-            UsernamePasswordAuthenticationToken authentication = getAuthentication(request);
+            UsernamePasswordAuthenticationToken authentication = getAuthentication(request, response);
             if(authentication == null) {
                 filterChain.doFilter(request, response);
                 return;
@@ -50,10 +50,10 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         }
     }
 
-    private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) throws IOException {
+    private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // 헤더에서 토큰을 가져온다.
         String token = request.getHeader(SecurityConstants.ACCESS_TOKEN_HEADER);
 
-        return token != null ? JwtTokenProvider.getAuthentication(token) : null;
+        return token != null ? JwtTokenProvider.getAuthentication(token, response) : null;
     }
 }
